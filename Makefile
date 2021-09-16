@@ -17,3 +17,4 @@ realclean: clean
 
 distclean: realclean
 	rm -f composer.lock
+	find . -name "*~" -exec rm -f {} \;
