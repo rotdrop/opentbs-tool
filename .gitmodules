@@ -1,0 +1,3 @@
+[submodule "3rdparty/opentbs"]
+	path = 3rdparty/opentbs
+	url = git@github.com:rotdrop/opentbs.git
