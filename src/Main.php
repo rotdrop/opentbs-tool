@@ -1,4 +1,3 @@
-#!/usr/bin/env php
 <?php
 /**
  * OpenTBSTool -- Command-line interface for OpenTBS
@@ -20,22 +19,37 @@
  * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
+namespace RotDrop\OpenTBSTool;
 
-use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
-use RotDrop\OpenTBSTool\Main;
+class Main extends Command
+{
+  protected static $defaultName = 'main';
 
-$main = new Main();
+  public function __construct()
+  {
+    parent::__construct();
+  }
 
-$application = (new Application('OpenTBS-Tool', '0.1-dev'));
 
-$application->add($main);
-$application->setDefaultCommand($main->getName(), true);
-$application->run();
+  protected function configure():void
+  {
+    $this->setDescription('Main entry point')
+         ->setHelp('Cannot help you ...');
+  }
 
-/*
- * Local Variables: ***
- * mode: php ***
- * End: ***
- */
+  protected function execute(InputInterface $input, OutputInterface $output):int
+  {
+    // outputs multiple lines to the console (adding "\n" at the end of each line)
+    $output->writeln([
+      'Hello World!',
+      '... and so on ...',
+    ]);
+
+    return Command::SUCCESS;
+  }
+
+}
