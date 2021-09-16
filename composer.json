@@ -25,7 +25,10 @@
   "repositories": [
     {
       "type": "path",
-      "url": "3rdparty/opentbs"
+      "url": "3rdparty/opentbs",
+      "options": {
+        "symlink": false
+      }
     }
   ],
   "bin": ["bin/opentbs-tool"],
