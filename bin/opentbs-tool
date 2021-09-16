@@ -1,0 +1,15 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use Symfony\Component\Console\Application;
+
+$application = new Application('OpenTBS-Tool', '0.1-dev');
+$application->run();
+
+/*
+ * Local Variables: ***
+ * mode: php ***
+ * End: ***
+ */

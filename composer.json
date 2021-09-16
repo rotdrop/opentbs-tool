@@ -9,8 +9,18 @@
       "email": "himself@claus-justus-heine.de"
     }
   ],
+  "autoload": {
+    "psr-4": {
+      "OpenTBSTool\\": "src/"
+    }
+  },
   "require": {
+    "php": ">=7.4.0",
+    "symfony/console": "*",
     "tinybutstrong/opentbs": "dev-feature/svg-images"
+  },
+  "require-dev": {
+    "clue/phar-composer": "*"
   },
   "repositories": [
     {
@@ -18,6 +28,7 @@
       "url": "3rdparty/opentbs"
     }
   ],
+  "bin": ["bin/opentbs-tool"],
   "minimum-stability": "dev",
   "prefer-stable": true
 }
