@@ -1,3 +1,23 @@
 {
-
+  "name": "rotdrop/opentbs-tool",
+  "description": "Simple command-line tool for OpenTBS",
+  "type": "project",
+  "license": "GPL",
+  "authors": [
+    {
+      "name": "Claus-Justus Heine",
+      "email": "himself@claus-justus-heine.de"
+    }
+  ],
+  "require": {
+    "tinybutstrong/opentbs": "dev-feature/svg-images"
+  },
+  "repositories": [
+    {
+      "type": "path",
+      "url": "3rdparty/opentbs"
+    }
+  ],
+  "minimum-stability": "dev",
+  "prefer-stable": true
 }
