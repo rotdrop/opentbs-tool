@@ -24,7 +24,9 @@ namespace RotDrop\OpenTBSTool;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 
 use clsTinyButStrong as TinyButStrong;
 use clsOpenTBS as OpenTBS;
@@ -57,10 +59,15 @@ class Main extends Command
 
     $this->addArgument('template', InputArgument::REQUIRED, 'Office Document Template (LibreOffice, Word ...)');
     $this->addArgument('data', InputArgument::REQUIRED, 'Template Substitution Data in JSON format');
+    $this->addOption('output', 'o', InputOption::VALUE_REQUIRED, 'Output file');
   }
 
   protected function execute(InputInterface $input, OutputInterface $output):int
   {
+    if ($output instanceof ConsoleOutputInterface) {
+      $output = $output->getErrorOutput();
+    }
+
     // outputs multiple lines to the console (adding "\n" at the end of each line)
     $output->writeln([
       'Hello World!',
@@ -73,10 +80,12 @@ class Main extends Command
     if ($templateDataFiles[0] === basename($templateDataFiles[0], '.json')) {
       $templateDataFiles[] = $templateDataFiles[0] . '.json';
     }
+    $outputFileName = $input->getOption('output');
 
     $output->writeln([
       'Template: ' . $templateFile,
       'Data: ' . implode(', ', $templateDataFiles),
+      'Output: ' . $outputFileName,
     ]);
 
     $templateData = null;
@@ -91,21 +100,32 @@ class Main extends Command
     }
 
     $templateData = json_decode($templateData, true, JSON_BIGINT_AS_STRING);
+    ksort($templateData);
     $output->writeln(print_r($templateData, true));
+
+    if (empty($outputFileName)) {
+      $templatePathInfo = pathinfo($templateFile);
+
+      $outputFileName = implode('/', [
+        $templatePathInfo['dirname'],
+        $templatePathInfo['filename']
+        . '-opentbs-'
+        . md5(json_encode($templateData))
+        . '.' . $templatePathInfo['extension']
+      ]);
+    }
 
     $this->tbs->ResetVarRef(false);
     $this->tbs->VarRef = $templateData;
 
     $this->tbs->LoadTemplate($templateFile, OPENTBS_ALREADY_UTF8);
 
-    $templatePathInfo = pathinfo($templateFile);
-    // $output->writeln(print_r($templatePathInfo, true));
-
-    $outputFileName = '/tmp/'
-      . $templatePathInfo['filename'] . '-opentbs'
-      . '.' . $templatePathInfo['extension'];
-
-    $this->tbs->show(OPENTBS_FILE, $outputFileName);
+    if ($outputFileName === '-') {
+      $this->tbs->show(OPENTBS_STRING);
+      fwrite(STDOUT, $this->tbs->Source);
+    } else {
+      $this->tbs->show(OPENTBS_FILE, $outputFileName);
+    }
 
     return Command::SUCCESS;
   }
