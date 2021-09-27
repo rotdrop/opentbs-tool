@@ -99,9 +99,9 @@ class Main extends Command
       throw new \RuntimeException('Unable to read substitution data from (any of) the file(s) ' . implode(', ', $templateDataFiles));
     }
 
-    $templateData = json_decode($templateData, true, JSON_BIGINT_AS_STRING);
+    $templateData = json_decode($templateData, true, 512, JSON_BIGINT_AS_STRING);
     ksort($templateData);
-    $output->writeln(print_r($templateData, true));
+    //$output->writeln(print_r($templateData, true));
 
     if (empty($outputFileName)) {
       $templatePathInfo = pathinfo($templateFile);
@@ -119,6 +119,14 @@ class Main extends Command
     $this->tbs->VarRef = $templateData;
 
     $this->tbs->LoadTemplate($templateFile, OPENTBS_ALREADY_UTF8);
+
+    foreach ($templateData as $key => $value) {
+      // assume merge-block if a data item is an array
+      if (is_array($value)) {
+        $output->writeln("Try merge-block for " . $key);
+        $this->tbs->MergeBlock($key, $value);
+      }
+    }
 
     if ($outputFileName === '-') {
       $this->tbs->show(OPENTBS_STRING);
