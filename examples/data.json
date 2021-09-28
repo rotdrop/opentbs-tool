@@ -5,11 +5,11 @@
             "col1": "Outer Row 1, Column 1 Data",
             "inner": [
                 {
-                    "col1": "Inner Row 1, Column 1 Data",
+                    "col1": 0.005,
                     "col2": "Inner Row 1, Column 2 Data"
                 },
                 {
-                    "col1": "Inner Row 2, Column 1 Data",
+                    "col1": 0.003,
                     "col2": "Inner Row 2, Column 2 Data"
                 }
             ]
@@ -18,15 +18,15 @@
             "col1": "Outer Row 2, Column 1 Data",
             "inner": [
                 {
-                    "col1": "Inner Row 1, Column 1 Data",
+                    "col1": 0.001,
                     "col2": "Inner Row 1, Column 2 Data"
                 },
                 {
-                    "col1": "Inner Row 2, Column 1 Data",
+                    "col1": 0.002,
                     "col2": "Inner Row 2, Column 2 Data"
                 },
                 {
-                    "col1": "Inner Row 3, Column 1 Data",
+                    "col1": 0.003,
                     "col2": "Inner Row 3, Column 2 Data"
                 }
             ]
