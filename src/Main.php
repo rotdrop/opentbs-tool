@@ -121,9 +121,13 @@ class Main extends Command
     $this->tbs->LoadTemplate($templateFile, OPENTBS_ALREADY_UTF8);
 
     foreach ($templateData as $key => $value) {
-      // assume merge-block if a data item is an array
       if (is_array($value)) {
+        // assume merge-block if a data item is an array, wrap it in
+        // to a numeric array if necessary in order to please TBS.
         $output->writeln("Try merge-block for " . $key);
+        if (array_keys($value) != range(0, count($value) - 1)) {
+          $value = [ $value ];
+        }
         $this->tbs->MergeBlock($key, $value);
       }
     }
