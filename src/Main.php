@@ -22,6 +22,11 @@
 
 namespace RotDrop\OpenTBSTool;
 
+use Closure;
+use DateTimeImmutable;
+use DateTimeZone;
+use RuntimeException;
+
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -35,6 +40,14 @@ use clsOpenTBS as OpenTBS;
 /** Command line entry point. */
 class Main extends Command
 {
+  /**
+   * @var string
+   *
+   * If present in the JSON data it is an array which maps deep-nested blocks
+   * to aliases.
+   */
+  const EXPLICIT_BLOCKS_KEY = '__blocks__';
+
   protected static $defaultName = 'main';
 
   /** @var TinyButStrong */
@@ -73,12 +86,6 @@ substitutes the value from the JSON file into the given office document.');
     if ($output instanceof ConsoleOutputInterface) {
       $output = $output->getErrorOutput();
     }
-
-    // outputs multiple lines to the console (adding "\n" at the end of each line)
-    $output->writeln([
-      'Hello World!',
-      '... and so on ...',
-    ]);
 
     // retrieve the argument value using getArgument()
     $templateFile = $input->getArgument('template');
@@ -121,6 +128,36 @@ substitutes the value from the JSON file into the given office document.');
       ]);
     }
 
+    $explicitBlocks = $templateData[self::EXPLICIT_BLOCKS_KEY] ?? [];
+    unset($templateData[self::EXPLICIT_BLOCKS_KEY]);
+
+    self::arrayWalkRecursive($templateData, function(mixed &$value, string $key, string $path, int $depth) use ($output) {
+      if (!is_array($value)) {
+        if ($value === false) {
+          $value = 0;
+        } elseif ($value === true) {
+          $value = 1;
+        } elseif ($value === null) {
+          $value = '';
+        }
+        return;
+      }
+      ksort($value);
+      if (count($value) == 3 && isset($value['date']) && isset($value['timezone_type']) && isset($value['timezone'])) {
+        // convert back to DateTimeImmutable
+        $timeZone = new DateTimeZone($value['timezone']);
+        $date = new DateTimeImmutable($value['date'], $timeZone);
+        // OpenTBS does not support DateTimeInterface or time-zones, so
+        // convert everything to a time-stamp and add the timezone-offset
+        // to get correct dates and times.
+        $stamp = $date->getTimestamp();
+        $stamp += $date->getOffset();
+        $output->writeln('REPLACE DATE BY TIMESTAMP ' . $path . ': ' . print_r($date, true) . ' -> ' . $stamp);
+        $value = $stamp;
+      }
+    });
+    unset($value);
+
     $this->tbs->ResetVarRef(false);
     $this->tbs->VarRef = $templateData;
 
@@ -130,12 +167,30 @@ substitutes the value from the JSON file into the given office document.');
       if (is_array($value)) {
         // assume merge-block if a data item is an array, wrap it in
         // to a numeric array if necessary in order to please TBS.
-        $output->writeln("Try merge-block for " . $key);
         if (array_keys($value) != range(0, count($value) - 1)) {
           $value = [ $value ];
         }
+        // $output->writeln('Try merge ' . $key . ' -> ' . print_r($value, true));
         $this->tbs->MergeBlock($key, $value);
       }
+    }
+
+    foreach ($explicitBlocks as $key => $reference) {
+      $indices = explode('.', $reference);
+      $value = $this->tbs->VarRef;
+      while (!empty($indices) && !empty($value)) {
+        $index = array_shift($indices);
+        $value = $value[$index] ?? null;
+      }
+      if (empty($value)) {
+        throw new RuntimeException(vsprintf('Data for block "%s" using the path "%s" could not be found in the substitution data.', [ $key, $reference ]));
+      }
+      $keys = array_keys($value);
+      if ($keys != array_filter($keys, 'is_int')) {
+        $value = [ $value ];
+      }
+      // $output->writeln("Try merge-block for " . $key . ' -> ' . $reference . ' -> ' . print_r($value, true));
+      $this->tbs->MergeBlock($key, $value);
     }
 
     if ($outputFileName === '-') {
@@ -146,5 +201,28 @@ substitutes the value from the JSON file into the given office document.');
     }
 
     return Command::SUCCESS;
+  }
+
+  /**
+   * @param array $array
+   *
+   * @param Closure $callback
+   *
+   * @param string $parentPath
+   *
+   * @param int $depth
+   *
+   * @return void
+   */
+  protected static function arrayWalkRecursive(array &$array, Closure $callback, string $parentPath = '', int $depth = 0):void
+  {
+    foreach ($array as $key => &$value) {
+      $path = $parentPath . ':' . $key;
+      $callback($value, $key, $path, $depth);
+      // if $value still is an array, recurse
+      if (is_array($value)) {
+        self::arrayWalkRecursive($value, $callback, $path, $depth + 1);
+      }
+    }
   }
 }
