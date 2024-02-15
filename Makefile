@@ -1,10 +1,11 @@
 COMPOSER = composer
+PHP = $(shell which php)
 PHAR = opentbs-tool.phar
 
 all: $(PHAR)
 
 $(PHAR): composer.lock src/Main.php bin/opentbs-tool
-	vendor/bin/phar-composer build
+	$(PHP) -d phar.readonly=0 vendor/bin/phar-composer build
 
 composer.lock: composer.json
 	{ [ -f $< ] && $(COMPOSER) update; } || $(COMPOSER) install
