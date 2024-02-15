@@ -2,8 +2,9 @@
 /**
  * OpenTBSTool -- Command-line interface for OpenTBS
  *
- * @author Claus-Justus Heine
- * @copyright 2021 Claus-Justus Heine <himself@claus-justus-heine.de>
+ * @author Claus-Justus Heine <himself@claus-justus-heine.de>
+ * @copyright 2021, 2024 Claus-Justus Heine <himself@claus-justus-heine.de>
+ * @license AGPL-3.0-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU GENERAL PUBLIC LICENSE
@@ -31,6 +32,7 @@ use Symfony\Component\Console\Input\InputOption;
 use clsTinyButStrong as TinyButStrong;
 use clsOpenTBS as OpenTBS;
 
+/** Command line entry point. */
 class Main extends Command
 {
   protected static $defaultName = 'main';
@@ -38,6 +40,7 @@ class Main extends Command
   /** @var TinyButStrong */
   private $tbs;
 
+  /** CTOR */
   public function __construct()
   {
     parent::__construct();
@@ -47,21 +50,24 @@ class Main extends Command
       $this->tbs->NoErr = true;
       $this->tbs->Plugin(TBS_INSTALL, OPENTBS_PLUGIN);
     } else {
-      throw new \RuntimeException('Unable to load OpenTBS backend.');
+      throw new RuntimeException('Unable to load OpenTBS backend.');
     }
   }
 
-
+  /** {@inheritdoc} */
   protected function configure():void
   {
-    $this->setDescription('Main entry point')
-         ->setHelp('Cannot help you ...');
+    $this->setDescription('Command-line interface to the OpenTBS office document template reaplacement library.')
+         ->setHelp('This is a low level command-line tool which needs a source file, the
+substitution data-set in JSON format. It then combines the two input files and
+substitutes the value from the JSON file into the given office document.');
 
     $this->addArgument('template', InputArgument::REQUIRED, 'Office Document Template (LibreOffice, Word ...)');
     $this->addArgument('data', InputArgument::REQUIRED, 'Template Substitution Data in JSON format');
     $this->addOption('output', 'o', InputOption::VALUE_REQUIRED, 'Output file');
   }
 
+  /** {@inheritdoc} */
   protected function execute(InputInterface $input, OutputInterface $output):int
   {
     if ($output instanceof ConsoleOutputInterface) {
@@ -96,7 +102,7 @@ class Main extends Command
       }
     }
     if (empty($templateData)) {
-      throw new \RuntimeException('Unable to read substitution data from (any of) the file(s) ' . implode(', ', $templateDataFiles));
+      throw new RuntimeException('Unable to read substitution data from (any of) the file(s) ' . implode(', ', $templateDataFiles));
     }
 
     $templateData = json_decode($templateData, true, 512, JSON_BIGINT_AS_STRING);
@@ -141,5 +147,4 @@ class Main extends Command
 
     return Command::SUCCESS;
   }
-
 }
